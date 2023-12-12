@@ -36,7 +36,7 @@ if (isset($_POST['login'])) {
 <html>
 
 <head>
-    <title>Register</title>
+    <title>Login</title>
     <link rel="stylesheet" href="../css/bootstrap.min.css" />
     <style>
         form {
@@ -66,7 +66,8 @@ if (isset($_POST['login'])) {
                     <?php } ?>
                 </div>
                 <button type="submit" name="login" class="btn btn-success mb-3">Login</button>
-
+                <span class="text-success text-center mb-3">Tidak punya akun? silahkan <a
+                        href="./register.php">daftar</a></span>
             </form>
         </div>
     </div>
