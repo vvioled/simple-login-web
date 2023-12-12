@@ -2,13 +2,14 @@
 
 session_start();
 
-include "../config.php";
+require "../config.php";
 
-$query = $pdo->query("SELECT id FROM users");
-$fetch = $query->fetchAll();
+if (!isset($_SESSION["user_id"])) {
+    header("Location: login.php");
+}
 
-foreach ($fetch as $user) {
-    if ($_SESSION["user_id"] === $user["id"]) {
-        header("Location: profile.php");
-    }
+$st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
+$st->execute(["id" => $_SESSION["user_id"]]);
+if ($st->fetch()) {
+    header("Location: profile.php");
 }
