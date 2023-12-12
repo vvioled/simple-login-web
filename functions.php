@@ -46,4 +46,17 @@ class BelajarPHP
             "password" => $password
         ]);
     }
+    function get(string $val, string $input): string
+    {
+        global $pdo;
+        $st = $pdo->prepare("SELECT $val FROM users WHERE username = :username OR email = :email LIMIT 1");
+        $st->execute([
+            "username" => $input,
+            "email" => $input
+        ]);
+        $fetch = $st->fetch();
+        if ($fetch)
+            return $fetch[$val];
+        return null;
+    }
 }
