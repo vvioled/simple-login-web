@@ -2,6 +2,22 @@
 session_start();
 
 require "../config.php";
+require "../functions.php";
+
+if (isset($_SESSION["user_id"])) {
+    $st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
+    $st->execute(["id" => $_SESSION["user_id"]]);
+    if ($st->fetch()) {
+        header("Location: profile.php");
+    }
+}
+
+function bad_requests(): void
+{
+    http_response_code(400);
+    echo "<h1>Error 400 Bad Request!</h1>";
+    exit();
+}
 
 $users_unvailable = false;
 $password_unvailable = false;
@@ -9,26 +25,29 @@ $password_unvailable = false;
 
 if (isset($_POST['login'])) {
 
+    $bp = new BelajarPHP();
+
+    if (!$bp->validate_input(["username", "password"])) {
+        bad_requests();
+    }
+
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $query = $pdo->prepare("SELECT * FROM users WHERE username = :username OR email = :email");
-    $query->execute(['username' => $username, 'email' => $username]);
-    $fetch = $query->fetch();
-
-    if ($fetch) {
-        if (hash_equals(hash("sha256", $password), $fetch['password'])) {
-            $_SESSION['user_id'] = $fetch['id'];
-            header("Location: profile.php");
-        } else {
-            $password_unvailable = true;
-        }
-    } else {
+    if (!($bp->check_username_exist($username) || $bp->check_email_exist($username))) {
         $users_unvailable = true;
+        goto out;
     }
+    if (!password_verify($password, $bp->get("password", $username))) {
+        $password_unvailable = true;
+        goto out;
+    }
+
+    $_SESSION['user_id'] = $bp->get("id", $username);
+    header("Location: profile.php");
 }
 
-
+out:
 ?>
 
 <!DOCTYPE html>
