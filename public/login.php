@@ -19,6 +19,8 @@ function bad_requests(): void
     exit();
 }
 
+$username_length_invalid = false;
+$password_length_invalid = false;
 $users_unvailable = false;
 $password_unvailable = false;
 
@@ -33,6 +35,15 @@ if (isset($_POST['login'])) {
 
     $username = $_POST['username'];
     $password = $_POST['password'];
+
+    if (!$bp->length_is_valid($username, 4)) {
+        $username_length_invalid = true;
+        goto out;
+    }
+    if (!$bp->length_is_valid($password, 6)) {
+        $password_length_invalid = true;
+        goto out;
+    }
 
     if (!($bp->check_username_exist($username) || $bp->check_email_exist($username))) {
         $users_unvailable = true;
@@ -73,6 +84,9 @@ out:
                     <label for="username" class="fw-semibold mb-2">Username atau email:</label>
                     <input placeholder="Masukkan username atau email" type="text" name="username" class="form-control"
                         required />
+                    <?php if ($username_length_invalid) { ?>
+                        <span class="text-danger mt-1">Input tidak boleh kurang dari 3</span>
+                    <?php } ?>
                     <?php if ($users_unvailable) { ?>
                         <span class="text-danger mt-1">Username atau email tidak tersedia</span>
                     <?php } ?>
@@ -80,6 +94,9 @@ out:
                 <div class="form-group pb-3">
                     <label for="password" class="fw-semibold mb-2">Password:</label>
                     <input placeholder="Masukkan Password" type="password" name="password" class="form-control">
+                    <?php if ($password_length_invalid) { ?>
+                        <span class="text-danger mt-1">panjang password tidak boleh kurang dari 6</span>
+                    <?php } ?>
                     <?php if ($password_unvailable) { ?>
                         <span class="text-danger mt-1">Password salah</span>
                     <?php } ?>
