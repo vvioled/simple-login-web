@@ -1,80 +1,70 @@
 <?php
 session_start();
 
-require "../config.php";
-require "../functions.php";
+require "../utilities.php";
 
-if (isset($_SESSION["user_id"])) {
-    $st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
-    $st->execute(["id" => $_SESSION["user_id"]]);
-    if ($st->fetch()) {
-        header("Location: profile.php");
-    }
+
+
+if (Utilities::session_exist()) {
+  header("Location: profile.php");
+  exit();
 }
+
 function bad_requests(): void
 {
-    http_response_code(400);
-    echo "<h1>Error 400 Bad Request!</h1>";
-    exit();
+  http_response_code(400);
+  echo "<h1>Error 400 Bad Request!</h1>";
+  exit();
 }
 
-
-$register_success = false;
-$invalid_fullname = false;
-$invalid_username = false;
-$username_length_invalid = false;
-$password_length_invalid = false;
 $username_exist = false;
 $email_exist = false;
-
+$register_success = false;
 
 if (isset($_POST['register'])) {
 
-    $bp = new BelajarPHP();
+  if (!Utilities::validate(["fullname", "username", "email", "password"])) {
+    bad_requests();
+  }
 
-    if (!$bp->validate_input(["fullname", "username", "email", "password"])) {
-        bad_requests();
-    }
+  $fullname = $_POST['fullname'];
+  $username = $_POST['username'];
+  $email = $_POST['email'];
+  $_password = $_POST['password'];
+  $password = password_hash($_password, PASSWORD_BCRYPT);
 
-    $fullname = $_POST['fullname'];
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $_password = $_POST['password'];
-    $password = password_hash($_password, PASSWORD_BCRYPT);
+  if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    bad_requests();
+  }
+  if (!preg_match("/^[a-zA-Z ]+$/", $fullname)) {
+    bad_requests();
+  }
+  if (!preg_match("/^[a-zA-Z0-9\.\_]+$/", $username)) {
+    bad_requests();
+  }
+  if (!Utilities::length_is_valid($username, 4)) {
+    bad_requests();
+  }
+  if (!Utilities::length_is_valid($_password, 6)) {
+    bad_requests();
+  }
+  if (Utilities::check("email", $email)) {
+    $email_exist = true;
+    goto out;
+  }
+  if (Utilities::check("username", $username)) {
+    $username_exist = true;
+    goto out;
+  }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        bad_requests();
-    }
-    if (!preg_match("/^[a-zA-Z ]+$/", $fullname)) {
-        $invalid_fullname = true;
-        goto out;
-    }
-    if (!preg_match("/^[a-zA-Z0-9\.\_]+$/", $username)) {
-        $invalid_username = true;
-        goto out;
-    }
-    if (!$bp->length_is_valid($username, 4)) {
-        $username_length_invalid = true;
-        goto out;
-    }
-    if (!$bp->length_is_valid($_password, 6)) {
-        $password_length_invalid = true;
-        goto out;
-    }
-    if ($bp->check_email_exist($email)) {
-        $email_exist = true;
-        goto out;
-    }
-    if ($bp->check_username_exist($username)) {
-        $username_exist = true;
-        goto out;
-    }
+  Utilities::store($fullname, $username, $email, $password);
 
-    $bp->store_to_db($fullname, $username, $email, $password);
-    $register_success = true;
+  $register_success = true;
+
 }
 
 out:
+
 ?>
 
 <!DOCTYPE html>
@@ -82,67 +72,188 @@ out:
 <html>
 
 <head>
-    <title>Register</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css" />
-    <style>
-        form {
-            max-width: 400px;
-        }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register</title>
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+    integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 500px;
+      margin-inline: 15px;
+    }
+  </style>
 </head>
 
-<body>
-    <div class="container">
-        <div class="vh-100 w-100 d-flex justify-content-center align-items-center">
-            <form action="" method="post" class="card px-3 shadow w-100">
-                <h1 class="mt-3 fw-bold text-uppercase text-center">Register</h1>
-                <?php if ($register_success) { ?>
-                    <span class="text-success text-center mb-2">Pendaftaran berhasil</span>
-                <?php } ?>
-                <div class="form-group pb-3">
-                    <label for="fullname" class="fw-semibold mb-2">Nama Lengkap:</label>
-                    <input placeholder="Masukkan nama lengkap" type="text" name="fullname" class="form-control"
-                        required />
-                    <?php if ($invalid_fullname) { ?>
-                        <span class="text-danger mt-1">Nama tidak valid</span>
-                    <?php } ?>
-                </div>
-                <div class="form-group pb-3">
-                    <label for="username" class="fw-semibold mb-2">Username:</label>
-                    <input placeholder="Masukkan username" type="text" name="username" class="form-control" required />
-                    <?php if ($invalid_username) { ?>
-                        <span class="text-danger mt-1">Username tidak valid</span>
-                    <?php } ?>
-                    <?php if ($username_length_invalid) { ?>
-                        <span class="text-danger mt-1">panjang username tidak boleh kurang dari 3</span>
-                    <?php } ?>
-                    <?php if ($username_exist) { ?>
-                        <span class="text-danger mt-1">Username sudah terdaftar</span>
-                    <?php } ?>
-                </div>
-                <div class="form-group pb-3">
-                    <label for="email" class="fw-semibold mb-2">Email:</label>
-                    <input placeholder="Masukkan email" type="email" name="email" class="form-control" required />
-                    <?php if ($email_exist) { ?>
-                        <span class="text-danger mt-1">Email sudah terdaftar</span>
-                    <?php } ?>
-                </div>
-                <div class="form-group pb-3">
-                    <label for="password" class="fw-semibold mb-2">Password:</label>
-                    <input placeholder="Masukkan Password" type="password" name="password" class="form-control"
-                        required />
-                    <?php if ($password_length_invalid) { ?>
-                        <span class="text-danger mt-1">panjang password tidak boleh kurang dari 6</span>
-                    <?php } ?>
-                </div>
-                <button type="submit" name="register" class="btn btn-success mb-3">Register</button>
-
-                <span class="text-success text-center mb-3">Sudah punya akun? silahkan <a
-                        href="./login.php">Login</a></span>
-
-            </form>
+<body class="has-background-light">
+  <div class="card">
+    <div class="card-content">
+      <h1 class="title">Register</h1>
+      <?php if ($register_success) { ?>
+        <p class="has-text-success has-text-centered">Pendaftaran berhasil</p>
+      <?php } ?>
+      <form class"has-fullwidth" action="" method="post">
+        <div class="field">
+          <label class="label">Full Name</label>
+          <div class="control has-icons-left">
+            <input class="input" type="text" id="fullname" name="fullname" placeholder="John Doe" required />
+            <span class="icon is-small is-left">
+              <i class="fas fa-user"></i>
+            </span>
+            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+          </div>
         </div>
+        <div class="field">
+          <label class="label">Username</label>
+          <?php if ($username_exist) { ?>
+            <p class="has-text-danger is-size-7 my-2">
+              Username already exist.
+            </p>
+          <?php } ?>
+          <div class="control has-icons-left">
+            <input class="input" type="text" id="username" name="username" placeholder="johndoe" required />
+            <span class="icon is-small is-left">
+              <i class="fas fa-user-circle"></i>
+            </span>
+            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Email</label>
+          <?php if ($email_exist) { ?>
+            <p class="has-text-danger is-size-7 my-2">Email already exist.</p>
+          <?php } ?>
+          <div class="control has-icons-left">
+            <input class="input" type="text" id="email" name="email" placeholder="johndoe@example.com" required />
+            <span class="icon is-small is-left">
+              <i class="fas fa-envelope"></i>
+            </span>
+            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <div class="control has-icons-left">
+            <input class="input" type="password" id="password" name="password" placeholder="********" required />
+            <span class="icon is-small is-left">
+              <i class="fas fa-lock"></i>
+            </span>
+            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+          </div>
+        </div>
+
+        <div class="field is-grouped">
+          <div class="control">
+            <button name="register" class="button is-primary">Sign Up</button>
+          </div>
+          <p class="control">
+            <a class="button is-light" href="login.php">Login</a>
+          </p>
+        </div>
+      </form>
     </div>
+  </div>
+  <script src="assets/js/zepto/zepto.min.js"></script>
+  <script>
+    const validateEmail = (email) => {
+      return String(email)
+        .toLowerCase()
+        .match(
+          /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        );
+    };
+
+    const validateUsername = (username) => {
+      return String(username).match(/^[a-zA-Z0-9\.\_]+$/);
+    }
+    const validateFullname = (fullname) => {
+      return String(fullname).match(/^[a-zA-Z ]+$/);
+    }
+
+    $("#password").on("input", function () {
+      if (this.value.length === 0) {
+        $(this).removeClass("is-success");
+        $(this).removeClass("is-danger");
+        $(this).next().next().addClass("is-hidden");
+      } else if (this.value.length > 0 && this.value.length < 8) {
+        $(this).removeClass("is-success");
+        $(this).addClass("is-danger");
+        $(this).next().next().removeClass("is-hidden");
+        $(this).next().next().text(`Password must be at least 8 characters long.`);
+      } else {
+        $(this).removeClass("is-danger");
+        $(this).addClass("is-success");
+        $(this).next().next().addClass("is-hidden");
+      }
+    });
+    $("#username").on("input", function () {
+      if (this.value.length === 0) {
+        $(this).removeClass("is-success");
+        $(this).removeClass("is-danger");
+        $(this).next().next().addClass("is-hidden");
+      } else if (!validateUsername(this.value)) {
+        $(this).removeClass("is-success");
+        $(this).addClass("is-danger");
+        $(this).next().next().removeClass("is-hidden");
+        $(this).next().next().text(`${this.value} is invalid username.`);
+      } else if (this.value.length > 0 && this.value.length < 4) {
+        $(this).removeClass("is-success");
+        $(this).addClass("is-danger");
+        $(this).next().next().removeClass("is-hidden");
+        $(this).next().next().text(`Username must be at least 8 characters long.`);
+      } else {
+        $(this).removeClass("is-danger");
+        $(this).addClass("is-success");
+        $(this).next().next().addClass("is-hidden");
+      }
+    });
+    $("#fullname").on("input", function () {
+      if (this.value.length === 0) {
+        $(this).removeClass("is-success");
+        $(this).removeClass("is-danger");
+        $(this).next().next().addClass("is-hidden");
+      } else if (!validateFullname(this.value)) {
+        $(this).removeClass("is-success");
+        $(this).addClass("is-danger");
+        $(this).next().next().removeClass("is-hidden");
+        $(this).next().next().text(`${this.value} is invalid full name.`);
+      } else {
+        $(this).removeClass("is-danger");
+        $(this).addClass("is-success");
+        $(this).next().next().addClass("is-hidden");
+      }
+    });
+    $("#email").on("input", function () {
+      if (this.value.length === 0) {
+        $(this).removeClass("is-success");
+        $(this).removeClass("is-danger");
+        $(this).next().next().addClass("is-hidden");
+      } else if (!validateEmail(this.value)) {
+        $(this).removeClass("is-success");
+        $(this).addClass("is-danger");
+        $(this).next().next().removeClass("is-hidden");
+        $(this).next().next().text(`${this.value} is invalid email.`);
+      } else {
+        $(this).removeClass("is-danger");
+        $(this).addClass("is-success");
+        $(this).next().next().addClass("is-hidden");
+      }
+    });
+  </script>
 </body>
 
 </html>

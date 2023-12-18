@@ -1,15 +1,11 @@
 <?php
 session_start();
 
-require "../config.php";
-require "../functions.php";
+require "../utilities.php";
 
-if (isset($_SESSION["user_id"])) {
-    $st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
-    $st->execute(["id" => $_SESSION["user_id"]]);
-    if ($st->fetch()) {
-        header("Location: profile.php");
-    }
+if (Utilities::session_exist()) {
+    header("Location: profile.php");
+    exit();
 }
 
 function bad_requests(): void
@@ -19,46 +15,36 @@ function bad_requests(): void
     exit();
 }
 
-$username_length_invalid = false;
-$password_length_invalid = false;
-$users_unvailable = false;
+$user_unvailable = false;
 $password_unvailable = false;
-
 
 if (isset($_POST['login'])) {
 
-    $bp = new BelajarPHP();
-
-    if (!$bp->validate_input(["username", "password"])) {
+    if (!Utilities::validate(["username", "password"])) {
         bad_requests();
     }
 
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    if (!$bp->length_is_valid($username, 4)) {
-        $username_length_invalid = true;
+    if (!Utilities::length_is_valid($password, 8)) {
+        bad_requests();
+    }
+    if (!(Utilities::check("email", $username) || Utilities::check("username", $username))) {
+        $user_unvailable = true;
         goto out;
     }
-    if (!$bp->length_is_valid($password, 6)) {
-        $password_length_invalid = true;
-        goto out;
-    }
-
-    if (!($bp->check_username_exist($username) || $bp->check_email_exist($username))) {
-        $users_unvailable = true;
-        goto out;
-    }
-    if (!password_verify($password, $bp->get("password", $username))) {
+    if (!password_verify($password, Utilities::get("password", $username))) {
         $password_unvailable = true;
         goto out;
     }
-
-    $_SESSION['user_id'] = $bp->get("id", $username);
+    $_SESSION['user_id'] = Utilities::get("id", $username);
     header("Location: profile.php");
+    exit();
 }
 
 out:
+
 ?>
 
 <!DOCTYPE html>
@@ -66,47 +52,101 @@ out:
 <html>
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
+        integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        form {
-            max-width: 400px;
+        body {
+            font-family: "Poppins", sans-serif;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            width: 100%;
+            max-width: 500px;
+            margin-inline: 15px;
         }
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <div class="vh-100 w-100 d-flex justify-content-center align-items-center">
-            <form action="" method="post" class="card px-3 shadow w-100">
-                <h1 class="mt-3 fw-bold text-uppercase text-center">Login</h1>
-                <div class="form-group pb-3">
-                    <label for="username" class="fw-semibold mb-2">Username atau email:</label>
-                    <input placeholder="Masukkan username atau email" type="text" name="username" class="form-control"
-                        required />
-                    <?php if ($username_length_invalid) { ?>
-                        <span class="text-danger mt-1">Input tidak boleh kurang dari 3</span>
+<body class="has-background-light">
+    <div class="card">
+        <div class="card-content">
+            <h1 class="title">Login</h1>
+            <form class"has-fullwidth" action="" method="post">
+                <div class="field">
+                    <label class="label">Username or Email</label>
+                    <?php if ($user_unvailable) { ?>
+                        <p class="has-text-danger is-size-7 my-2">
+                            Username or Email doest exist.
+                        </p>
                     <?php } ?>
-                    <?php if ($users_unvailable) { ?>
-                        <span class="text-danger mt-1">Username atau email tidak tersedia</span>
-                    <?php } ?>
+                    <div class="control has-icons-left">
+                        <input class="input" type="text" name="username" placeholder="johndoe / johndoe@example.com"
+                            required />
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-user-circle"></i>
+                        </span>
+                        <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+                    </div>
                 </div>
-                <div class="form-group pb-3">
-                    <label for="password" class="fw-semibold mb-2">Password:</label>
-                    <input placeholder="Masukkan Password" type="password" name="password" class="form-control">
-                    <?php if ($password_length_invalid) { ?>
-                        <span class="text-danger mt-1">panjang password tidak boleh kurang dari 6</span>
-                    <?php } ?>
+                <div class="field">
+                    <label class="label">Password</label>
                     <?php if ($password_unvailable) { ?>
-                        <span class="text-danger mt-1">Password salah</span>
+                        <p class="has-text-danger is-size-7 my-2">
+                            Wrong password.
+                        </p>
                     <?php } ?>
+                    <div class="control has-icons-left">
+                        <input class="input" type="password" id="password" name="password" placeholder="********"
+                            required />
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+                    </div>
                 </div>
-                <button type="submit" name="login" class="btn btn-success mb-3">Login</button>
-                <span class="text-success text-center mb-3">Tidak punya akun? silahkan <a
-                        href="./register.php">daftar</a></span>
+
+                <div class="field is-grouped">
+                    <div class="control">
+                        <button name="login" class="button is-primary">Login</button>
+                    </div>
+                    <p class="control">
+                        <a class="button is-light" href="register.php">Sign Up</a>
+                    </p>
+                </div>
             </form>
         </div>
     </div>
+    <script src="assets/js/zepto/zepto.min.js"></script>
+    <script>
+        $("#password").on("input", function () {
+            if (this.value.length === 0) {
+                $(this).removeClass("is-success");
+                $(this).removeClass("is-danger");
+                $(this).next().next().addClass("is-hidden");
+            } else if (this.value.length > 0 && this.value.length < 8) {
+                $(this).removeClass("is-success");
+                $(this).addClass("is-danger");
+                $(this).next().next().removeClass("is-hidden");
+                $(this).next().next().text(`Password must be at least 8 characters long.`);
+            } else {
+                $(this).removeClass("is-danger");
+                $(this).addClass("is-success");
+                $(this).next().next().addClass("is-hidden");
+            }
+        });
+    </script>
 </body>
 
 </html>

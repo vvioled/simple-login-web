@@ -1,15 +1,14 @@
 <?php
-
 session_start();
 
-require "../config.php";
+require "../utilities.php";
 
 if (!isset($_SESSION["user_id"])) {
     header("Location: login.php");
+    exit();
 }
 
-$st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
-$st->execute(["id" => $_SESSION["user_id"]]);
-if ($st->fetch()) {
+if (Utilities::session_exist()) {
     header("Location: profile.php");
+    exit();
 }

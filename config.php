@@ -1,11 +1,11 @@
 <?php
 
 $host = "localhost";
-$db = "my_database";
+$dbname = "my_database";
 $user = "root";
 $pass = "";
 
-$dsn = "mysql:host=$host;dbname=$db";
+$dsn = "mysql:host=$host;dbname=$dbname";
 
 try {
     $pdo = new PDO($dsn, $user, $pass, [
@@ -14,5 +14,5 @@ try {
 } catch (PDOException $e) {
     http_response_code(500);
     echo "<h1>500 - Internal Server Error</h1>";
-    exit(0);
+    exit();
 }
