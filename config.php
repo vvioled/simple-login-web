@@ -1,7 +1,7 @@
 <?php
 
 $host = "localhost";
-$dbname = "learn";
+$dbname = "Belajar_PHP";
 $user = "kyzsuki";
 $pass = "qwerty123";
 
