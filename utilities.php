@@ -50,6 +50,7 @@ class Utilities
     }
     public static function store(string $fullname, string $username, string $email, string $password): void
     {
+
         global $pdo;
         $st = $pdo->prepare("INSERT INTO users (fullname, username, email, password) VALUES (:fullname, :username, :email, :password)");
         $st->execute([
@@ -72,17 +73,18 @@ class Utilities
             return $fetch[$val];
         return null;
     }
-    public static function get_profile(string $id): array
+    public static function get_profile(string $id): ?array
     {
         global $pdo;
-        $st = $pdo->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
+        $st = $pdo->prepare("SELECT `fullname`, `username`, `email` FROM users WHERE id = :id LIMIT 1");
         $st->execute([
             "id" => $id
         ]);
-        $fetch = $st->fetch();
+
+        $fetch = $st->fetchAll();
         if ($fetch)
             return $fetch;
-        return [];
+        return null;
     }
     public static function session_exist(): bool
     {
