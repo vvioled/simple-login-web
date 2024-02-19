@@ -4,7 +4,32 @@ require "config.php";
 
 class Utilities
 {
-    static function validate(array $list): bool
+    public static function login(string $user, string $pass, string &$err): ?array
+    {
+        global $pdo;
+
+        if (filter_var($user, FILTER_VALIDATE_EMAIL)) {
+            $field = "email";
+        } else {
+            $field = "username";
+        }
+
+        $q = "SELECT `id`, `password`, `username` FROM `users` WHERE {$field} = ? LIMIT 1";
+        $st = $pdo->prepare($q);
+        $st->execute([$user]);
+        $ret = $st->fetch(PDO::FETCH_ASSOC);
+        if (!$ret) {
+            $err = "Username or email does not exist";
+            return NULL;
+        }
+        if (!password_verify($pass, $ret["password"])) {
+            $err = "Password is wrong";
+            return NULL;
+        }
+
+        return $ret; 
+    }
+    public static function validate(array $list): bool
     {
         foreach ($list as $key) {
             if (!(isset($_POST[$key]) && is_string($_POST[$key])))
@@ -12,7 +37,7 @@ class Utilities
         }
         return true;
     }
-    static function check(string $key, string $value): bool
+    public static function check(string $key, string $value): bool
     {
         global $pdo;
         $st = $pdo->prepare("SELECT id FROM users WHERE $key = :$key LIMIT 1");
@@ -23,7 +48,7 @@ class Utilities
             return true;
         return false;
     }
-    static function store(string $fullname, string $username, string $email, string $password): void
+    public static function store(string $fullname, string $username, string $email, string $password): void
     {
         global $pdo;
         $st = $pdo->prepare("INSERT INTO users (fullname, username, email, password) VALUES (:fullname, :username, :email, :password)");
@@ -34,7 +59,7 @@ class Utilities
             "password" => $password
         ]);
     }
-    static function get(string $val, string $input): ?string
+    public static function get(string $val, string $input): ?string
     {
         global $pdo;
         $st = $pdo->prepare("SELECT $val FROM users WHERE username = :username OR email = :email LIMIT 1");
@@ -47,23 +72,23 @@ class Utilities
             return $fetch[$val];
         return null;
     }
-    static function get_profile(string $id): array
+    public static function get_profile(string $id): array
     {
         global $pdo;
         $st = $pdo->prepare("SELECT * FROM users WHERE id = :id LIMIT 1");
         $st->execute([
             "id" => $id
         ]);
-        $fetch = $st->fetchAll();
+        $fetch = $st->fetch();
         if ($fetch)
             return $fetch;
         return [];
     }
-    static function session_exist(): bool
+    public static function session_exist(): bool
     {
         global $pdo;
         if (isset($_SESSION["user_id"])) {
-            $st = $pdo->prepare("SELECT id FROM users WHERE id = :id");
+            $st = $pdo->prepare("SELECT id FROM users WHERE id = :id LIMIT 1");
             $st->execute(["id" => $_SESSION["user_id"]]);
             if ($st->fetch()) {
                 return true;
@@ -71,7 +96,7 @@ class Utilities
         }
         return false;
     }
-    static function length_is_valid(string $input, int $req): bool
+    public static function length_is_valid(string $input, int $req): bool
     {
         if (strlen($input) < $req)
             return false;

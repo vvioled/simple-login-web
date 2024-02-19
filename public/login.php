@@ -15,8 +15,7 @@ function bad_requests(): void
     exit();
 }
 
-$user_unvailable = false;
-$password_unvailable = false;
+$err = "";
 
 if (isset($_POST['login'])) {
 
@@ -30,15 +29,13 @@ if (isset($_POST['login'])) {
     if (!Utilities::length_is_valid($password, 8)) {
         bad_requests();
     }
-    if (!(Utilities::check("email", $username) || Utilities::check("username", $username))) {
-        $user_unvailable = true;
+
+    $ret = Utilities::login($username, $password, $err);
+
+    if (is_null($ret)) {
         goto out;
     }
-    if (!password_verify($password, Utilities::get("password", $username))) {
-        $password_unvailable = true;
-        goto out;
-    }
-    $_SESSION['user_id'] = Utilities::get("id", $username);
+    $_SESSION['user_id'] = $ret["id"];
     header("Location: profile.php");
     exit();
 }
@@ -79,6 +76,11 @@ out:
     </style>
 </head>
 
+<?php if (!empty($err)): ?>
+<script>
+    alert('<?= $err; ?>');
+</script>
+<?php endif; ?>
 <body class="has-background-light">
     <div class="card">
         <div class="card-content">
@@ -86,11 +88,6 @@ out:
             <form class"has-fullwidth" action="" method="post">
                 <div class="field">
                     <label class="label">Username or Email</label>
-                    <?php if ($user_unvailable) { ?>
-                        <p class="has-text-danger is-size-7 my-2">
-                            Username or Email doest exist.
-                        </p>
-                    <?php } ?>
                     <div class="control has-icons-left">
                         <input class="input" type="text" name="username" placeholder="johndoe / johndoe@example.com"
                             required />
@@ -102,11 +99,6 @@ out:
                 </div>
                 <div class="field">
                     <label class="label">Password</label>
-                    <?php if ($password_unvailable) { ?>
-                        <p class="has-text-danger is-size-7 my-2">
-                            Wrong password.
-                        </p>
-                    <?php } ?>
                     <div class="control has-icons-left">
                         <input class="input" type="password" id="password" name="password" placeholder="********"
                             required />
