@@ -52,12 +52,8 @@ out:
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
     <link rel="shortcut icon" href="favicon.ico" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
-        integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css" integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: "Poppins", sans-serif;
@@ -76,11 +72,12 @@ out:
     </style>
 </head>
 
-<?php if (!empty($err)): ?>
-<script>
-    alert('<?= $err; ?>');
-</script>
+<?php if (!empty($err)) : ?>
+    <script>
+        alert('<?= $err; ?>');
+    </script>
 <?php endif; ?>
+
 <body class="has-background-light">
     <div class="card">
         <div class="card-content">
@@ -89,8 +86,7 @@ out:
                 <div class="field">
                     <label class="label">Username or Email</label>
                     <div class="control has-icons-left">
-                        <input class="input" type="text" name="username" placeholder="johndoe / johndoe@example.com"
-                            required />
+                        <input class="input" type="text" name="username" placeholder="johndoe / johndoe@example.com" required />
                         <span class="icon is-small is-left">
                             <i class="fas fa-user-circle"></i>
                         </span>
@@ -100,8 +96,7 @@ out:
                 <div class="field">
                     <label class="label">Password</label>
                     <div class="control has-icons-left">
-                        <input class="input" type="password" id="password" name="password" placeholder="********"
-                            required />
+                        <input class="input" type="password" id="password" name="password" placeholder="********" required />
                         <span class="icon is-small is-left">
                             <i class="fas fa-lock"></i>
                         </span>
@@ -122,20 +117,18 @@ out:
     </div>
     <script src="assets/js/zepto/zepto.min.js"></script>
     <script>
-        $("#password").on("input", function () {
-            if (this.value.length === 0) {
-                $(this).removeClass("is-success");
-                $(this).removeClass("is-danger");
-                $(this).next().next().addClass("is-hidden");
-            } else if (this.value.length > 0 && this.value.length < 8) {
-                $(this).removeClass("is-success");
-                $(this).addClass("is-danger");
-                $(this).next().next().removeClass("is-hidden");
-                $(this).next().next().text(`Password must be at least 8 characters long.`);
-            } else {
-                $(this).removeClass("is-danger");
-                $(this).addClass("is-success");
-                $(this).next().next().addClass("is-hidden");
+        $("#password").on("input", function() {
+            const $password = $(this);
+            const passwordLength = $password.val().length;
+
+            $password.removeClass("is-success is-danger");
+            $password.next().next().toggleClass("is-hidden", passwordLength === 0);
+
+            if (passwordLength > 0 && passwordLength < 8) {
+                $password.addClass("is-danger");
+                $password.next().next().text("Password must be at least 8 characters long.");
+            } else if (passwordLength >= 8) {
+                $password.addClass("is-success");
             }
         });
     </script>

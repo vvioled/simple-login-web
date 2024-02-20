@@ -60,7 +60,6 @@ if (isset($_POST['register'])) {
   Utilities::store($fullname, $username, $email, $password);
 
   $register_success = true;
-
 }
 
 out:
@@ -75,12 +74,8 @@ out:
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register</title>
   <link rel="shortcut icon" href="favicon.ico" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css"
-    integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.4/css/bulma.min.css" integrity="sha512-HqxHUkJM0SYcbvxUw5P60SzdOTy/QVwA1JJrvaXJv4q7lmbDZCmZaqz01UPOaQveoxfYRv1tHozWGPMcuTBuvQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       font-family: "Poppins", sans-serif;
@@ -169,88 +164,34 @@ out:
   </div>
   <script src="assets/js/zepto/zepto.min.js"></script>
   <script>
-    const validateEmail = (email) => {
-      return String(email)
-        .toLowerCase()
-        .match(
-          /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        );
+    const validateInput = (inputField, validationFn, errorMessage) => {
+      if (inputField.value.length === 0) {
+        $(inputField).removeClass("is-success").removeClass("is-danger").next().next().addClass("is-hidden");
+      } else if (!validationFn(inputField.value)) {
+        $(inputField).removeClass("is-success").addClass("is-danger").next().next().removeClass("is-hidden").text(`${inputField.value} ${errorMessage}`);
+      } else {
+        $(inputField).removeClass("is-danger").addClass("is-success").next().next().addClass("is-hidden");
+      }
     };
 
-    const validateUsername = (username) => {
-      return String(username).match(/^[a-zA-Z0-9\.\_]+$/);
-    }
-    const validateFullname = (fullname) => {
-      return String(fullname).match(/^[a-zA-Z ]+$/);
-    }
+    const validateEmail = (email) => String(email).toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+    const validateUsername = (username) => String(username).match(/^[a-zA-Z0-9\.\_]+$/);
+    const validateFullname = (fullname) => String(fullname).match(/^[a-zA-Z ]+$/);
 
-    $("#password").on("input", function () {
-      if (this.value.length === 0) {
-        $(this).removeClass("is-success");
-        $(this).removeClass("is-danger");
-        $(this).next().next().addClass("is-hidden");
-      } else if (this.value.length > 0 && this.value.length < 8) {
-        $(this).removeClass("is-success");
-        $(this).addClass("is-danger");
-        $(this).next().next().removeClass("is-hidden");
-        $(this).next().next().text(`Password must be at least 8 characters long.`);
-      } else {
-        $(this).removeClass("is-danger");
-        $(this).addClass("is-success");
-        $(this).next().next().addClass("is-hidden");
-      }
-    });
-    $("#username").on("input", function () {
-      if (this.value.length === 0) {
-        $(this).removeClass("is-success");
-        $(this).removeClass("is-danger");
-        $(this).next().next().addClass("is-hidden");
-      } else if (!validateUsername(this.value)) {
-        $(this).removeClass("is-success");
-        $(this).addClass("is-danger");
-        $(this).next().next().removeClass("is-hidden");
-        $(this).next().next().text(`${this.value} is invalid username.`);
-      } else if (this.value.length > 0 && this.value.length < 4) {
-        $(this).removeClass("is-success");
-        $(this).addClass("is-danger");
-        $(this).next().next().removeClass("is-hidden");
-        $(this).next().next().text(`Username must be at least 8 characters long.`);
-      } else {
-        $(this).removeClass("is-danger");
-        $(this).addClass("is-success");
-        $(this).next().next().addClass("is-hidden");
-      }
-    });
-    $("#fullname").on("input", function () {
-      if (this.value.length === 0) {
-        $(this).removeClass("is-success");
-        $(this).removeClass("is-danger");
-        $(this).next().next().addClass("is-hidden");
-      } else if (!validateFullname(this.value)) {
-        $(this).removeClass("is-success");
-        $(this).addClass("is-danger");
-        $(this).next().next().removeClass("is-hidden");
-        $(this).next().next().text(`${this.value} is invalid full name.`);
-      } else {
-        $(this).removeClass("is-danger");
-        $(this).addClass("is-success");
-        $(this).next().next().addClass("is-hidden");
-      }
-    });
-    $("#email").on("input", function () {
-      if (this.value.length === 0) {
-        $(this).removeClass("is-success");
-        $(this).removeClass("is-danger");
-        $(this).next().next().addClass("is-hidden");
-      } else if (!validateEmail(this.value)) {
-        $(this).removeClass("is-success");
-        $(this).addClass("is-danger");
-        $(this).next().next().removeClass("is-hidden");
-        $(this).next().next().text(`${this.value} is invalid email.`);
-      } else {
-        $(this).removeClass("is-danger");
-        $(this).addClass("is-success");
-        $(this).next().next().addClass("is-hidden");
+    $("#password, #username, #fullname, #email").on("input", function() {
+      switch (this.id) {
+        case "password":
+          validateInput(this, value => value.length >= 8, "Password must be at least 8 characters long.");
+          break;
+        case "username":
+          validateInput(this, validateUsername, "is an invalid username.");
+          break;
+        case "fullname":
+          validateInput(this, validateFullname, "is an invalid full name.");
+          break;
+        case "email":
+          validateInput(this, validateEmail, "is an invalid email.");
+          break;
       }
     });
   </script>
