@@ -23,7 +23,7 @@ $register_success = false;
 
 if (isset($_POST['register'])) {
 
-  if (!Utilities::validate(["fullname", "username", "email", "password"])) {
+  if (!Utilities::validate_string_input(["fullname", "username", "email", "password"])) {
     bad_requests();
   }
 
@@ -48,11 +48,11 @@ if (isset($_POST['register'])) {
   if (!Utilities::length_is_valid($_password, 6)) {
     bad_requests();
   }
-  if (Utilities::check("email", $email)) {
+  if (Utilities::get_user_id_by_field("email", $email)) {
     $email_exist = true;
     goto out;
   }
-  if (Utilities::check("username", $username)) {
+  if (Utilities::get_user_id_by_field("username", $username)) {
     $username_exist = true;
     goto out;
   }
@@ -99,7 +99,7 @@ out:
     <div class="card-content">
       <h1 class="title">Register</h1>
       <?php if ($register_success) { ?>
-        <p class="has-text-success has-text-centered">Pendaftaran berhasil</p>
+        <p class="has-text-success has-text-centered">Registration Success</p>
       <?php } ?>
       <form class"has-fullwidth" action="" method="post">
         <div class="field">
@@ -108,7 +108,7 @@ out:
             <input class="input" type="text" id="fullname" name="fullname" placeholder="John Doe" required />
             <span class="icon is-small is-left">
               <i class="fas fa-user"></i>
-            </span>
+            </span>"
             <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
           </div>
         </div>
@@ -116,7 +116,7 @@ out:
           <label class="label">Username</label>
           <?php if ($username_exist) { ?>
             <p class="has-text-danger is-size-7 my-2">
-              Username already exist.
+              Username already exists.
             </p>
           <?php } ?>
           <div class="control has-icons-left">
@@ -127,10 +127,10 @@ out:
             <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
           </div>
         </div>
-        <div class="field">
+        <div class="field">"
           <label class="label">Email</label>
           <?php if ($email_exist) { ?>
-            <p class="has-text-danger is-size-7 my-2">Email already exist.</p>
+            <p class="has-text-danger is-size-7 my-2">Email already exists.</p>
           <?php } ?>
           <div class="control has-icons-left">
             <input class="input" type="text" id="email" name="email" placeholder="johndoe@example.com" required />

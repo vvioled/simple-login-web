@@ -9,7 +9,12 @@ if (!isset($_SESSION["user_id"])) {
     exit();
 }
 
-$profile = Utilities::get_profile($_SESSION["user_id"])[0];
+$profile = Utilities::get_profile($_SESSION["user_id"]);
+
+if (is_null($profile)) {
+    header("Location: logout.php");
+    exit();
+}
 
 ?>
 
@@ -40,45 +45,55 @@ $profile = Utilities::get_profile($_SESSION["user_id"])[0];
 <body class="has-background-light">
     <div class="card">
         <div class="card-content">
-            <h1 class="title">Profile</h1>
-            <div class="field">
-                <span class="label">Full Name</span>
-                <div class="control has-icons-left">
-                    <span class="input">
-                        <?= $profile["fullname"] ?>
-                    </span>
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-user"></i>
-                    </span>
+            <?php if (isset($_GET["edit"])) : ?>
+                <?php include __DIR__ . "/edit_profile.php" ?>
+            <?php else : ?>
+                <h1 class="title">Profile</h1>
+                <div class="field">
+                    <figure class="image is-128x128">
+                        <img class="is-rounded" src="./storage/files/<?= $profile["profile_image"] ?>">
+                    </figure>
                 </div>
-            </div>
-            <div class="field">
-                <span class="label">Username</span>
-                <div class="control has-icons-left">
-                    <span class="input">
-                        <?= $profile["username"] ?>
-                    </span>
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-user-circle"></i>
-                    </span>
+                <div class="field">
+                    <span class="label">Full Name</span>
+                    <div class="control has-icons-left">
+                        <span class="input">
+                            <?= $profile["fullname"] ?>
+                        </span>
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-user"></i>
+                        </span>
+                    </div>
                 </div>
-            </div>
-            <div class="field mb-4">
-                <span class="label">Email</span>
-                <div class="control has-icons-left">
-                    <span class="input">
-                        <?= $profile["email"] ?>
-                    </span>
-                    <span class="icon is-small is-left">
-                        <i class="fas fa-envelope"></i>
-                    </span>
+                <div class="field">
+                    <span class="label">Username</span>
+                    <div class="control has-icons-left">
+                        <span class="input">
+                            <?= $profile["username"] ?>
+                        </span>
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-user-circle"></i>
+                        </span>
+                    </div>
                 </div>
-            </div>
-            <div class="field has-text-centered">
-                <div class="control">
-                    <a href="logout.php" class="button is-primary">Logout</a>
+                <div class="field mb-4">
+                    <span class="label">Email</span>
+                    <div class="control has-icons-left">
+                        <span class="input">
+                            <?= $profile["email"] ?>
+                        </span>
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                    </div>
                 </div>
-            </div>
+                <div class="field has-text-centered">
+                    <div class="control">
+                        <a href="profile.php?edit=1" class="button is-primary">edit</a>
+                        <a href="logout.php" class="button is-primary">Logout</a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </body>

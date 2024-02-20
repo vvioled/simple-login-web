@@ -19,7 +19,7 @@ $err = "";
 
 if (isset($_POST['login'])) {
 
-    if (!Utilities::validate(["username", "password"])) {
+    if (!Utilities::validate_string_input(["username", "password"])) {
         bad_requests();
     }
 
@@ -35,7 +35,7 @@ if (isset($_POST['login'])) {
     if (is_null($ret)) {
         goto out;
     }
-    $_SESSION['user_id'] = $ret["id"];
+    $_SESSION['user_id'] = (int)$ret["id"];
     header("Location: profile.php");
     exit();
 }
