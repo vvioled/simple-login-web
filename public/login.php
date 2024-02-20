@@ -27,20 +27,22 @@ if (isset($_POST['login'])) {
     $password = $_POST['password'];
 
     if (!Utilities::length_is_valid($password, 8)) {
-        bad_requests();
+        $err = "Password must be at least 8 characters long";
+        goto OUT;
     }
 
     $ret = Utilities::login($username, $password, $err);
 
     if (is_null($ret)) {
-        goto out;
+        $err = "";
+        goto OUT;
     }
     $_SESSION['user_id'] = (int)$ret["id"];
     header("Location: profile.php");
     exit();
 }
 
-out:
+OUT:
 
 ?>
 
@@ -72,16 +74,13 @@ out:
     </style>
 </head>
 
-<?php if (!empty($err)) : ?>
-    <script>
-        alert('<?= $err; ?>');
-    </script>
-<?php endif; ?>
-
 <body class="has-background-light">
     <div class="card">
         <div class="card-content">
             <h1 class="title">Login</h1>
+            <?php if (!empty($err)) : ?>
+                <p class="has-text-danger has-text-centered"><?= $err ?></p>
+            <?php endif; ?>
             <form class"has-fullwidth" action="" method="post">
                 <div class="field">
                     <label class="label">Username or Email</label>
@@ -90,7 +89,6 @@ out:
                         <span class="icon is-small is-left">
                             <i class="fas fa-user-circle"></i>
                         </span>
-                        <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
                     </div>
                 </div>
                 <div class="field">
@@ -100,7 +98,6 @@ out:
                         <span class="icon is-small is-left">
                             <i class="fas fa-lock"></i>
                         </span>
-                        <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
                     </div>
                 </div>
 
@@ -115,23 +112,6 @@ out:
             </form>
         </div>
     </div>
-    <script src="assets/js/zepto/zepto.min.js"></script>
-    <script>
-        $("#password").on("input", function() {
-            const $password = $(this);
-            const passwordLength = $password.val().length;
-
-            $password.removeClass("is-success is-danger");
-            $password.next().next().toggleClass("is-hidden", passwordLength === 0);
-
-            if (passwordLength > 0 && passwordLength < 8) {
-                $password.addClass("is-danger");
-                $password.next().next().text("Password must be at least 8 characters long.");
-            } else if (passwordLength >= 8) {
-                $password.addClass("is-success");
-            }
-        });
-    </script>
 </body>
 
 </html>

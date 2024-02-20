@@ -50,7 +50,7 @@ class Utilities
         return (int)$ret[0];
     }
 
-    public static function store(string $fullname, string $username, string $email, string $password): void
+    public static function register(string $fullname, string $username, string $email, string $password): void
     {
         global $pdo;
         $st = $pdo->prepare("INSERT INTO users (fullname, username, email, password) VALUES (:fullname, :username, :email, :password)");
@@ -62,16 +62,16 @@ class Utilities
         ]);
     }
 
-    public static function get(string $val, string $input): ?string
-    {
-        global $pdo;
-        $st = $pdo->prepare("SELECT $val FROM users WHERE username = :username OR email = :email LIMIT 1");
-        $st->execute(["username" => $input, "email" => $input]);
-        $fetch = $st->fetch();
-        return $fetch ? $fetch[$val] : null;
-    }
+    // public static function get(string $val, string $input): ?string
+    // {
+    //     global $pdo;
+    //     $st = $pdo->prepare("SELECT $val FROM users WHERE username = :username OR email = :email LIMIT 1");
+    //     $st->execute(["username" => $input, "email" => $input]);
+    //     $fetch = $st->fetch();
+    //     return $fetch ? $fetch[$val] : null;
+    // }
 
-    public static function update(string $id, string $fullname, string $username, string $email, ?string $filename, ?string $ext): bool
+    public static function update_profile(string $id, string $fullname, string $username, string $email, ?string $filename, ?string $ext): bool
     {
         global $pdo;
         $field = [
@@ -109,6 +109,8 @@ class Utilities
         } else {
             $ret["profile_image"] = bin2hex($ret["profile_image"]) . "." . $ret["ext"];
         }
+        $err = "Password dont match";
+
 
         return $ret;
     }
@@ -127,5 +129,36 @@ class Utilities
     public static function length_is_valid(string $input, int $req): bool
     {
         return strlen($input) >= $req;
+    }
+    public static function verify_password(string $id, string $old_password, string $new_password, string $new_password2, &$err): bool
+    {
+        global $pdo;
+        $st = $pdo->prepare("SELECT password FROM users WHERE id = :id LIMIT 1");
+        $st->execute(["id" => $id]);
+        $ret = $st->fetch(PDO::FETCH_NUM);
+
+        if (!$ret) {
+            return false;
+        }
+
+        if (!password_verify($old_password, $ret[0])) {
+            $err = "The old password is wrong";
+            return false;
+        }
+        if ($new_password !== $new_password2) {
+            $err = "New password does not match with confirm password";
+            return false;
+        }
+
+        return true;
+    }
+    public static function update_password(string $id, string $new_password): bool
+    {
+        global $pdo;
+        $st = $pdo->prepare("UPDATE users SET password = :password WHERE id = :id LIMIT 1");
+        return $st->execute([
+            "password" => password_hash($new_password, PASSWORD_BCRYPT),
+            "id" => $id
+        ]);
     }
 }

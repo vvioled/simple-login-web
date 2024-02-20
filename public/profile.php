@@ -46,7 +46,9 @@ if (is_null($profile)) {
     <div class="card">
         <div class="card-content">
             <?php if (isset($_GET["edit"])) : ?>
-                <?php include __DIR__ . "/edit_profile.php" ?>
+                <?php "../lib/edit_profile.php" ?>
+            <?php elseif (isset($_GET["change_password"])) : ?>
+                <?php include "../lib/change_password.php" ?>
             <?php else : ?>
                 <h1 class="title">Profile</h1>
                 <div class="field">
@@ -87,9 +89,10 @@ if (is_null($profile)) {
                         </span>
                     </div>
                 </div>
+                <div class="field"><a href="profile.php?change_password=1" class="button is-text">Change password</a></div>
                 <div class="field has-text-centered">
                     <div class="control">
-                        <a href="profile.php?edit=1" class="button is-primary">edit</a>
+                        <a href="profile.php?edit=1" class="button is-primary">Edit Profile</a>
                         <a href="logout.php" class="button is-primary">Logout</a>
                     </div>
                 </div>

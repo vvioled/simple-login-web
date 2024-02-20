@@ -17,13 +17,12 @@ function bad_requests(): void
   exit();
 }
 
-$username_exist = false;
-$email_exist = false;
+$err = "";
 $register_success = false;
 
 if (isset($_POST['register'])) {
 
-  if (!Utilities::validate_string_input(["fullname", "username", "email", "password"])) {
+  if (!Utilities::validate_string_input(["fullname", "username", "email", "password", "password2"])) {
     bad_requests();
   }
 
@@ -31,10 +30,11 @@ if (isset($_POST['register'])) {
   $username = $_POST['username'];
   $email = $_POST['email'];
   $_password = $_POST['password'];
+  $_password2 = $_POST["password2"];
   $password = password_hash($_password, PASSWORD_BCRYPT);
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    bad_requests();
+    $err = "The email format is invalid";
   }
   if (!preg_match("/^[a-zA-Z ]+$/", $fullname)) {
     bad_requests();
@@ -43,26 +43,35 @@ if (isset($_POST['register'])) {
     bad_requests();
   }
   if (!Utilities::length_is_valid($username, 4)) {
-    bad_requests();
+    $err = "Username must be at least 4 characters long";
   }
-  if (!Utilities::length_is_valid($_password, 6)) {
-    bad_requests();
+  if (!Utilities::length_is_valid($_password, 8)) {
+    $err = "Password must be at least 8 characters long";
+    goto OUT;
+  }
+  if (!Utilities::length_is_valid($_password2, 8)) {
+    $err = "Confirm password must be at least 8 characters long";
+    goto OUT;
+  }
+  if ($_password2 !== $password) {
+    $err = "New password does not match with confirm password";
+    goto OUT;
   }
   if (Utilities::get_user_id_by_field("email", $email)) {
-    $email_exist = true;
-    goto out;
+    $err = "Email already exists";
+    goto OUT;
   }
   if (Utilities::get_user_id_by_field("username", $username)) {
-    $username_exist = true;
-    goto out;
+    $err = "Username already exits";
+    goto OUT;
   }
 
-  Utilities::store($fullname, $username, $email, $password);
+  Utilities::register($fullname, $username, $email, $password);
 
   $register_success = true;
 }
 
-out:
+OUT:
 
 ?>
 
@@ -98,6 +107,9 @@ out:
   <div class="card">
     <div class="card-content">
       <h1 class="title">Register</h1>
+      <?php if (!empty($err)) { ?>
+        <p class="has-text-danger has-text-centered"><?= $err ?></p>
+      <?php } ?>
       <?php if ($register_success) { ?>
         <p class="has-text-success has-text-centered">Registration Success</p>
       <?php } ?>
@@ -105,52 +117,48 @@ out:
         <div class="field">
           <label class="label">Full Name</label>
           <div class="control has-icons-left">
-            <input class="input" type="text" id="fullname" name="fullname" placeholder="John Doe" required />
+            <input class="input" type="text" name="fullname" placeholder="John Doe" required />
             <span class="icon is-small is-left">
               <i class="fas fa-user"></i>
-            </span>"
-            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
+            </span>
           </div>
         </div>
         <div class="field">
           <label class="label">Username</label>
-          <?php if ($username_exist) { ?>
-            <p class="has-text-danger is-size-7 my-2">
-              Username already exists.
-            </p>
-          <?php } ?>
           <div class="control has-icons-left">
-            <input class="input" type="text" id="username" name="username" placeholder="johndoe" required />
+            <input class="input" type="text" name="username" placeholder="johndoe" required />
             <span class="icon is-small is-left">
               <i class="fas fa-user-circle"></i>
             </span>
-            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
           </div>
         </div>
-        <div class="field">"
+        <div class="field">
           <label class="label">Email</label>
-          <?php if ($email_exist) { ?>
-            <p class="has-text-danger is-size-7 my-2">Email already exists.</p>
-          <?php } ?>
           <div class="control has-icons-left">
-            <input class="input" type="text" id="email" name="email" placeholder="johndoe@example.com" required />
+            <input class="input" type="text" name="email" placeholder="johndoe@example.com" required />
             <span class="icon is-small is-left">
               <i class="fas fa-envelope"></i>
             </span>
-            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
           </div>
         </div>
         <div class="field">
           <label class="label">Password</label>
           <div class="control has-icons-left">
-            <input class="input" type="password" id="password" name="password" placeholder="********" required />
+            <input class="input" type="password" name="password" placeholder="********" required />
             <span class="icon is-small is-left">
               <i class="fas fa-lock"></i>
             </span>
-            <p class="has-text-danger is-size-7 my-2 is-hidden"></p>
           </div>
         </div>
-
+        <div class="field">
+          <label class="label">Confirm Password</label>
+          <div class="control has-icons-left">
+            <input class="input" type="password" name="password2" placeholder="********" required />
+            <span class="icon is-small is-left">
+              <i class="fas fa-lock"></i>
+            </span>
+          </div>
+        </div>
         <div class="field is-grouped">
           <div class="control">
             <button name="register" class="button is-primary">Sign Up</button>
@@ -162,39 +170,6 @@ out:
       </form>
     </div>
   </div>
-  <script src="assets/js/zepto/zepto.min.js"></script>
-  <script>
-    const validateInput = (inputField, validationFn, errorMessage) => {
-      if (inputField.value.length === 0) {
-        $(inputField).removeClass("is-success").removeClass("is-danger").next().next().addClass("is-hidden");
-      } else if (!validationFn(inputField.value)) {
-        $(inputField).removeClass("is-success").addClass("is-danger").next().next().removeClass("is-hidden").text(`${inputField.value} ${errorMessage}`);
-      } else {
-        $(inputField).removeClass("is-danger").addClass("is-success").next().next().addClass("is-hidden");
-      }
-    };
-
-    const validateEmail = (email) => String(email).toLowerCase().match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
-    const validateUsername = (username) => String(username).match(/^[a-zA-Z0-9\.\_]+$/);
-    const validateFullname = (fullname) => String(fullname).match(/^[a-zA-Z ]+$/);
-
-    $("#password, #username, #fullname, #email").on("input", function() {
-      switch (this.id) {
-        case "password":
-          validateInput(this, value => value.length >= 8, "Password must be at least 8 characters long.");
-          break;
-        case "username":
-          validateInput(this, validateUsername, "is an invalid username.");
-          break;
-        case "fullname":
-          validateInput(this, validateFullname, "is an invalid full name.");
-          break;
-        case "email":
-          validateInput(this, validateEmail, "is an invalid email.");
-          break;
-      }
-    });
-  </script>
 </body>
 
 </html>

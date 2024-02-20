@@ -1,5 +1,7 @@
 <?php
 
+require_once "../utilities.php";
+
 function bad_requests(): void
 {
     http_response_code(400);
@@ -78,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $file_ext = NULL;
     }
 
-    Utilities::update($_SESSION["user_id"], $fullname, $username, $email, $hashfile, $file_ext);
+    Utilities::update_profile($_SESSION["user_id"], $fullname, $username, $email, $hashfile, $file_ext);
     header("Location: profile.php");
     exit();
 }
